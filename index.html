@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>봇 매매일지 98</title>
+<meta name="description" content="국장·미장 자동매매 봇의 하루 성적표">
+<link rel="icon" href="assets/robot.png">
+<style>
+/* VOICE occasion: a loud, fancy Y2K retro desktop — my two trading bots live inside an old OS
+   IDEA the page is a 98-style desktop with colourful program windows; each window is one part of the report
+   PICTURE TODAY.EXE: a 3D robot (KR bot) and alien (US bot) floating over a sticker scene with confetti or rain
+   COLOUR cobalt desk with grid, cream windows, title bars in hot pink, lime, tangerine, cyan, violet, lemon; black outlines; red up / blue down for money
+   TYPE Galmuri11 (Korean pixel font) everywhere, bold for numbers
+   LAYOUT ticker, title row, TODAY window full width, then SCORE + CALENDAR, CHART + LOOT; phone stacks */
+@font-face{font-family:Galmuri;src:url(fonts/Galmuri11.woff2) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:Galmuri;src:url(fonts/Galmuri11-Bold.woff2) format("woff2");font-weight:700;font-display:swap}
+:root{color-scheme:light;--desk:#2f4dff;--grid:#4a64ff;--win:#fffdf2;--ink:#111;--pink:#ff4fa3;--lime:#b8ff3d;--tang:#ff8a1f;--cyan:#2ee6ff;--vio:#8b5cff;--lemon:#ffe14d;--up:#ff2d55;--dn:#1f5bff;--soft:#6b6457}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background:var(--desk);background-image:linear-gradient(var(--grid) 2px,transparent 2px),linear-gradient(90deg,var(--grid) 2px,transparent 2px);background-size:40px 40px;color:var(--ink);font:15px/1.6 Galmuri,"Apple SD Gothic Neo",monospace;overflow-x:clip}
+.tick{background:var(--lemon);border-bottom:3px solid var(--ink);overflow:hidden;white-space:nowrap;font-weight:700}
+.tick div{display:inline-block;padding:6px 0;animation:mq 26s linear infinite}
+@keyframes mq{to{transform:translateX(-50%)}}
+.band{padding:clamp(14px,3vw,30px) max(4vw,16px)}
+.wrap{max-width:1160px;margin:0 auto;display:grid;gap:22px}
+.head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+h1{font-size:clamp(32px,6vw,52px);line-height:1.05;margin:0;color:#fff;text-shadow:4px 4px 0 var(--ink),-2px -2px 0 var(--pink);font-weight:700}
+.pill{background:var(--win);border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink);padding:4px 12px;border-radius:999px;font-size:13px}
+.win{background:var(--win);border:3px solid var(--ink);box-shadow:8px 8px 0 var(--ink);border-radius:8px;overflow:hidden}
+.tb{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px;border-bottom:3px solid var(--ink);font-weight:700}
+.tb i{display:inline-flex;gap:5px;font-style:normal}
+.tb b{width:16px;height:16px;border:2px solid var(--ink);background:var(--win);display:inline-block;border-radius:3px}
+.body{padding:16px}
+.pink{background:var(--pink)}.lime{background:var(--lime)}.tang{background:var(--tang)}.cyan{background:var(--cyan)}.vio{background:var(--vio);color:#fff}.lemon{background:var(--lemon)}
+.scene{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;padding:22px 18px 18px;background:linear-gradient(#ffd6ec 0 50%,#c9f7ff 50%);background-size:100% 100%;min-height:330px;overflow:hidden}
+.scene::before{content:"";position:absolute;inset:auto 0 0 0;height:38%;background:repeating-linear-gradient(90deg,#b8ff3d 0 30px,#a3ef25 30px 60px);border-top:3px solid var(--ink)}
+.bot{position:relative;display:grid;grid-template-columns:minmax(110px,44%) minmax(0,1fr);align-items:center;gap:12px;z-index:1}
+.char{position:relative;aspect-ratio:1}
+.char img.me{width:100%;height:100%;object-fit:contain;filter:drop-shadow(5px 6px 0 rgba(0,0,0,.25));animation:bob 2.4s ease-in-out infinite}
+.bot:nth-child(2) .char img.me{animation-delay:-1.2s}
+@keyframes bob{50%{transform:translateY(-10px) rotate(-3deg)}}
+.char .hat{position:absolute;width:42%;left:29%;top:-18%;animation:bob 2.4s ease-in-out infinite}
+.char .wx{position:absolute;width:56%;left:22%;top:-34%}
+.card{background:var(--win);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--ink);border-radius:10px;padding:10px 12px;transform:rotate(-1.5deg)}
+.bot:nth-child(2) .card{transform:rotate(1.5deg)}
+.lab{display:inline-block;font-weight:700;font-size:13px;border:2px solid var(--ink);border-radius:6px;padding:0 8px}
+.big{font-weight:700;font-size:clamp(24px,3.6vw,38px);line-height:1.15;white-space:nowrap;margin:6px 0 2px}
+.up{color:var(--up)}.dn{color:var(--dn)}.zero{color:var(--soft)}
+.meta{color:var(--soft);font-size:13px}
+.coin{position:absolute;width:34px;top:-40px;animation:fall linear infinite;z-index:2}
+@keyframes fall{to{transform:translateY(420px) rotate(540deg)}}
+.ctl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 16px;border-top:3px solid var(--ink)}
+.btn{font:700 15px Galmuri,monospace;border:3px solid var(--ink);background:var(--win);color:var(--ink);padding:8px 14px;min-height:44px;cursor:pointer;box-shadow:4px 4px 0 var(--ink);border-radius:8px}
+.btn:active{transform:translate(4px,4px);box-shadow:none}
+.btn.go{background:var(--pink);color:#fff}
+.btn:disabled{opacity:.4;cursor:default}
+.btn:focus-visible,.d.has:focus-visible,.tab:focus-visible{outline:3px dashed var(--ink);outline-offset:3px}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;align-items:start}
+.sc{display:grid;gap:14px}
+.row{display:grid;grid-template-columns:44px minmax(0,1fr);gap:10px;align-items:center}
+.row img{width:44px}
+.seg{display:flex;gap:3px;height:22px;margin:4px 0}
+.seg span{flex:1;border:2px solid var(--ink);border-radius:3px}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.dow{text-align:center;font-size:12px;color:var(--soft)}
+.d{aspect-ratio:1;border:2px dashed #d8d2c0;border-radius:8px;position:relative;font:12px Galmuri;background:transparent;padding:0;color:var(--soft)}
+.d span{position:absolute;left:5px;top:2px}
+.d.has{border:3px solid var(--ink);cursor:pointer;color:var(--ink)}
+.d.p{background:var(--lemon)}.d.l{background:#bcd3ff}
+.d.sel{box-shadow:3px 3px 0 var(--ink);transform:translate(-2px,-2px)}
+.d img{position:absolute;width:56%;right:6%;bottom:6%}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.tab{font:700 13px Galmuri;border:2px solid var(--ink);background:var(--win);padding:4px 12px;min-height:40px;border-radius:999px;cursor:pointer}
+.tab[aria-pressed=true]{background:var(--ink);color:var(--lemon)}
+.fig{position:relative;min-height:230px}.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+.loot{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.loot li{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:10px;align-items:center;border:2px solid var(--ink);border-radius:8px;padding:6px 10px;background:#fff}
+.loot img{width:30px}
+.num{white-space:nowrap;font-weight:700;text-align:right}
+.modal{position:fixed;inset:0;background:rgba(17,17,17,.72);display:none;place-items:center;padding:16px;z-index:9}
+.modal.on{display:grid}
+.modal .win{max-width:400px;width:100%}
+.modal img{width:100%;max-height:60vh;object-fit:contain;border:3px solid var(--ink);border-radius:8px;display:block}
+footer{color:#dfe5ff;font-size:12px}
+footer a{color:#fff}
+@media(max-width:780px){.grid2{grid-template-columns:minmax(0,1fr)}.scene{grid-template-columns:minmax(0,1fr)}}
+@media(prefers-reduced-motion:reduce){.tick div,.char img.me,.char .hat,.coin{animation:none}.coin{display:none}}
+</style>
+</head>
+<body>
+<div class="tick" aria-hidden="true"><div id="tick">★ 불러오는 중 ★</div></div>
+<div class="band"><div class="wrap">
+  <div class="head"><h1>봇 매매일지 98</h1><span class="pill" id="upd">loading…</span></div>
+
+  <section class="win">
+    <div class="tb pink"><span id="todayT">TODAY.EXE</span><i><b></b><b></b><b></b></i></div>
+    <div class="scene" id="scene"><div class="bot" id="kr"></div><div class="bot" id="us"></div></div>
+    <div class="ctl">
+      <div style="display:flex;gap:10px"><button class="btn" id="prev">◀ 전날</button><button class="btn" id="next">다음날 ▶</button></div>
+      <strong id="sum"></strong>
+      <button class="btn go" id="share">인스타 스토리 공유</button>
+    </div>
+  </section>
+
+  <div class="grid2">
+    <section class="win"><div class="tb lime"><span>SCORE.EXE</span><i><b></b><b></b></i></div><div class="body sc" id="score"></div></section>
+    <section class="win"><div class="tb tang"><span id="calT">CALENDAR.APP</span><i><b></b><b></b></i></div><div class="body"><div class="cal" id="cal"></div></div></section>
+  </div>
+  <div class="grid2">
+    <section class="win"><div class="tb cyan"><span>CHART.EXE · 누적 손익</span><i><b></b><b></b></i></div><div class="body">
+      <div class="tabs" role="group" aria-label="시장 선택"><button class="tab" data-m="all" aria-pressed="true">전체</button><button class="tab" data-m="kr" aria-pressed="false">국장</button><button class="tab" data-m="us" aria-pressed="false">미장</button></div>
+      <div class="fig"><svg id="chart" role="img" aria-label="누적 손익 계단 그래프"></svg></div></div></section>
+    <section class="win"><div class="tb vio"><span id="lootT">LOOT.TXT</span><i><b></b><b></b></i></div><div class="body"><ul class="loot" id="loot"></ul></div></section>
+  </div>
+  <footer>미장 금액은 봇 추정치(수수료 반영)를 그날 환율로 원화 환산했어요. 실제 체결·수수료는 한투 앱 기준.<br>
+  캐릭터·아이콘 <a href="https://github.com/microsoft/fluentui-emoji">Microsoft Fluent Emoji</a> (MIT) · 글꼴 <a href="https://github.com/quiple/galmuri">Galmuri</a> (OFL)</footer>
+</div></div>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="스토리 이미지">
+  <div class="win"><div class="tb lemon"><span>STORY.PNG</span><i><b></b></i></div><div class="body" style="display:grid;gap:10px;text-align:center">
+    <img id="shot" alt="인스타 스토리용 오늘의 성적표 이미지"><p class="meta" id="mmsg" style="margin:0"></p>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><a class="btn" id="dl" download>이미지 저장</a><button class="btn" id="close">닫기</button></div>
+  </div></div>
+</div>
+
+<script>
+{
+const $ = s => document.querySelector(s);
+const won = n => (n > 0 ? "+" : n < 0 ? "−" : "") + Math.abs(Math.round(n)).toLocaleString("ko-KR") + "원";
+const cls = n => n > 0 ? "up" : n < 0 ? "dn" : "zero";
+const el = (tag, props = {}, kids = []) => { const e = document.createElement(tag); Object.assign(e, props); kids.forEach(k => e.append(k)); return e; };
+const img = (n, c = "") => el("img", { src: `assets/${n}.png`, alt: "", className: c });
+const BOT = { kr: { name: "국장 봇", char: "robot", col: "#ff8a1f" }, us: { name: "미장 봇", char: "alien", col: "#8b5cff" } };
+let D = { days: [] }, dates = [], cur = 0, mkt = "all";
+const byDate = d => D.days.filter(x => x.date === d);
+const pick = (d, m) => D.days.find(x => x.date === d && x.market === m);
+const fmtD = d => { const t = new Date(d + "T00:00:00"); return `${t.getMonth() + 1}월 ${t.getDate()}일 (${"일월화수목금토"[t.getDay()]})`; };
+
+function renderToday() {
+  const d = dates[cur], day = byDate(d), sum = day.reduce((a, x) => a + x.pnl, 0);
+  $("#todayT").textContent = `TODAY.EXE · ${fmtD(d)}`;
+  for (const m of ["kr", "us"]) {
+    const x = pick(d, m), box = $("#" + m); box.replaceChildren();
+    const ch = el("div", { className: "char" }, [img(BOT[m].char, "me")]);
+    if (x && x.pnl > 0) ch.append(img("crown", "hat"));
+    if (x && x.pnl < 0) ch.append(img("rain", "wx"));
+    if (!x) ch.firstChild.style.opacity = ".45";
+    const card = el("div", { className: "card" });
+    const lab = el("span", { className: "lab", textContent: BOT[m].name }); lab.style.background = BOT[m].col; lab.style.color = "#fff";
+    card.append(lab);
+    if (x) {
+      const pct = x.capital ? x.pnl / x.capital * 100 : 0;
+      card.append(el("div", { className: "big " + cls(x.pnl), textContent: won(x.pnl) }),
+        el("div", { className: "meta", textContent: `${x.wins}승 ${x.losses}패 · ${pct >= 0 ? "+" : "−"}${Math.abs(pct).toFixed(2)}%${x.usd != null ? " · $" + x.usd.toFixed(2) : ""}` }),
+        el("div", { textContent: x.note || "", style: "font-size:13px;margin-top:4px" }));
+    } else card.append(el("div", { className: "big zero", textContent: "휴식 중" }), el("div", { className: "meta", textContent: "이날은 매매가 없었어요" }));
+    box.append(ch, card);
+  }
+  document.querySelectorAll(".coin").forEach(c => c.remove());
+  if (sum > 0) for (let i = 0; i < 10; i++) { const c = img(i % 3 ? "coin" : "sparkles", "coin"); c.style.left = (5 + i * 9.5) + "%"; c.style.animationDuration = (2.6 + (i * 7 % 10) / 4) + "s"; c.style.animationDelay = (-(i * 0.7)) + "s"; $("#scene").append(c); }
+  const s = $("#sum"); s.textContent = `오늘 합계 ${won(sum)}`; s.className = cls(sum);
+  $("#prev").disabled = cur === 0; $("#next").disabled = cur === dates.length - 1;
+  renderCal(); renderLoot();
+}
+function renderScore() {
+  const box = $("#score"); box.replaceChildren();
+  for (const m of ["kr", "us"]) {
+    const xs = D.days.filter(x => x.market === m), w = xs.reduce((a, x) => a + x.wins, 0), l = xs.reduce((a, x) => a + x.losses, 0), s = xs.reduce((a, x) => a + x.pnl, 0);
+    const seg = el("div", { className: "seg" }); const t = w + l || 1, nW = Math.round(w / t * 12);
+    for (let i = 0; i < 12; i++) seg.append(el("span", { style: `background:${i < nW ? "var(--up)" : "var(--dn)"}` }));
+    const info = el("div", {}, [el("strong", { textContent: `${BOT[m].name} ${w}승 ${l}패` }), seg,
+      el("div", { className: "meta" }, [`${xs.length}일 중 ${xs.filter(x => x.pnl > 0).length}일 수익 · 누적 `, el("b", { className: cls(s), textContent: won(s) })])]);
+    box.append(el("div", { className: "row" }, [img(BOT[m].char), info]));
+  }
+  const all = D.days.reduce((a, x) => a + x.pnl, 0);
+  box.append(el("div", { className: "row" }, [img(all >= 0 ? "trophy" : "bomb"), el("div", {}, [el("div", { className: "meta", textContent: "전체 누적 (국장+미장)" }), el("div", { className: "big " + cls(all), textContent: won(all) })])]));
+}
+function renderCal() {
+  const t = new Date(dates[cur] + "T00:00:00"), y = t.getFullYear(), mo = t.getMonth();
+  $("#calT").textContent = `CALENDAR.APP · ${y}년 ${mo + 1}월`;
+  const box = $("#cal"); box.replaceChildren(...[..."일월화수목금토"].map(c => el("div", { className: "dow", textContent: c })));
+  for (let i = 0; i < new Date(y, mo, 1).getDay(); i++) box.append(el("div"));
+  for (let i = 1; i <= new Date(y, mo + 1, 0).getDate(); i++) {
+    const k = `${y}-${String(mo + 1).padStart(2, "0")}-${String(i).padStart(2, "0")}`, rows = byDate(k);
+    if (!rows.length) { box.append(el("div", { className: "d" }, [el("span", { textContent: i })])); continue; }
+    const s = rows.reduce((a, r) => a + r.pnl, 0);
+    const b = el("button", { className: `d has ${s >= 0 ? "p" : "l"}${k === dates[cur] ? " sel" : ""}` }, [el("span", { textContent: i }), img(s >= 0 ? "coin" : "rain")]);
+    b.setAttribute("aria-label", `${i}일 ${won(s)}`); b.onclick = () => { cur = dates.indexOf(k); renderToday(); };
+    box.append(b);
+  }
+}
+function renderLoot() {
+  const d = dates[cur], xs = byDate(d).flatMap(x => x.trades.map(t => ({ ...t, m: x.market }))).sort((a, b) => b.pnl - a.pnl);
+  $("#lootT").textContent = `LOOT.TXT · ${fmtD(d)}`;
+  const ul = $("#loot"); ul.replaceChildren();
+  if (!xs.length) { ul.append(el("li", { textContent: "이날은 종목별 기록이 없어요", style: "grid-template-columns:1fr" })); return; }
+  xs.forEach(t => ul.append(el("li", {}, [img(t.pnl >= 0 ? "gem" : "bomb"),
+    el("span", {}, [t.name + " ", el("span", { className: "meta", textContent: t.m === "kr" ? "국장" : "미장" })]),
+    el("span", { className: "num " + cls(t.pnl), textContent: won(t.pnl) })])));
+}
+const svg = $("#chart");
+function drawChart() {
+  const W = svg.clientWidth, H = svg.clientHeight; if (!W || !dates.length) return;
+  let acc = 0; const s = dates.map(d => acc += byDate(d).filter(x => mkt === "all" || x.market === mkt).reduce((a, x) => a + x.pnl, 0));
+  const L = 10, R = W < 440 ? 92 : 120, T = 22, B = 28, lo = Math.min(0, ...s), hi = Math.max(0, ...s), sp = hi - lo || 1;
+  const X = i => L + (s.length < 2 ? (W - L - R) / 2 : i * (W - L - R) / (s.length - 1)), Y = v => T + (hi - v) / sp * (H - T - B);
+  const col = mkt === "kr" ? "#ff8a1f" : mkt === "us" ? "#8b5cff" : "#ff4fa3";
+  let p = `M${X(0)},${Y(0)}`; s.forEach((v, i) => p += `H${X(i)}V${Y(v)}`);
+  const area = p + `H${X(s.length - 1)}V${Y(0)}Z`, lv = s[s.length - 1];
+  const ns = "http://www.w3.org/2000/svg";
+  svg.innerHTML = `<path d="${area}" fill="${col}" opacity=".25"/><path d="${p}" fill="none" stroke="#111" stroke-width="7" stroke-linejoin="round"/><path d="${p}" fill="none" stroke="${col}" stroke-width="4" stroke-linejoin="round"/><line x1="${L}" x2="${W - R + 10}" y1="${Y(0)}" y2="${Y(0)}" stroke="#111" stroke-dasharray="5 5" opacity=".5"/>`;
+  s.forEach((v, i) => { const r = document.createElementNS(ns, "rect"); Object.entries({ x: X(i) - 6, y: Y(v) - 6, width: 12, height: 12, fill: "#ffe14d", stroke: "#111", "stroke-width": 3 }).forEach(([k, val]) => r.setAttribute(k, val)); svg.append(r);
+    if (W >= 440 || i % 2 === 0 || i === s.length - 1) { const t = document.createElementNS(ns, "text"); t.setAttribute("x", X(i)); t.setAttribute("y", H - 6); t.setAttribute("text-anchor", "middle"); t.setAttribute("font-size", "13"); t.textContent = `${+dates[i].slice(5, 7)}/${+dates[i].slice(8)}`; svg.append(t); } });
+  const t = document.createElementNS(ns, "text"); t.setAttribute("x", X(s.length - 1) + 12); t.setAttribute("y", Y(lv) + 5); t.setAttribute("font-size", "15"); t.setAttribute("font-weight", "700"); t.setAttribute("fill", lv >= 0 ? "#ff2d55" : "#1f5bff"); t.textContent = won(lv); svg.append(t);
+}
+const ro = new ResizeObserver(drawChart); ro.observe(svg);
+
+const loadImg = n => new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = `assets/${n}.png`; });
+async function story() {
+  await document.fonts.ready;
+  const d = dates[cur], day = byDate(d), sum = day.reduce((a, x) => a + x.pnl, 0);
+  const c = el("canvas", { width: 1080, height: 1920 }), g = c.getContext("2d");
+  const F = (w, s) => `${w} ${s}px Galmuri, monospace`;
+  g.fillStyle = "#2f4dff"; g.fillRect(0, 0, 1080, 1920); g.strokeStyle = "#4a64ff"; g.lineWidth = 4;
+  for (let i = 0; i <= 1080; i += 60) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i, 1920); g.stroke(); }
+  for (let i = 0; i <= 1920; i += 60) { g.beginPath(); g.moveTo(0, i); g.lineTo(1080, i); g.stroke(); }
+  const win = (x, y, w, h, bar, title) => { g.fillStyle = "#111"; g.fillRect(x + 14, y + 14, w, h); g.fillStyle = "#fffdf2"; g.fillRect(x, y, w, h); g.fillStyle = bar; g.fillRect(x, y, w, 70); g.lineWidth = 6; g.strokeStyle = "#111"; g.strokeRect(x, y, w, h); g.beginPath(); g.moveTo(x, y + 70); g.lineTo(x + w, y + 70); g.stroke(); g.fillStyle = "#111"; g.font = F(700, 34); g.textAlign = "left"; g.fillText(title, x + 24, y + 48); };
+  g.fillStyle = "#fff"; g.font = F(700, 92); g.textAlign = "center"; g.fillText("봇 매매일지 98", 540, 170);
+  g.font = F(400, 44); g.fillText(fmtD(d), 540, 250);
+  let y = 330;
+  for (const m of ["kr", "us"]) {
+    const x = pick(d, m);
+    win(70, y, 940, 480, m === "kr" ? "#ff8a1f" : "#8b5cff", m === "kr" ? "KR_BOT.EXE · 국장" : "US_BOT.EXE · 미장");
+    g.drawImage(await loadImg(BOT[m].char), 100, y + 120, 320, 320);
+    if (x && x.pnl > 0) g.drawImage(await loadImg("crown"), 200, y + 70, 130, 130);
+    if (x && x.pnl < 0) g.drawImage(await loadImg("rain"), 180, y + 60, 160, 160);
+    g.textAlign = "left"; g.fillStyle = !x ? "#6b6457" : x.pnl > 0 ? "#ff2d55" : x.pnl < 0 ? "#1f5bff" : "#6b6457";
+    g.font = F(700, 82); g.fillText(x ? won(x.pnl) : "휴식 중", 450, y + 270);
+    if (x) { g.fillStyle = "#111"; g.font = F(700, 50); g.fillText(`${x.wins}승 ${x.losses}패`, 450, y + 350); g.fillStyle = "#6b6457"; g.font = F(400, 40); g.fillText(`${x.pnl >= 0 ? "+" : ""}${(x.pnl / x.capital * 100).toFixed(2)}%`, 450, y + 410); }
+    y += 540;
+  }
+  win(70, 1430, 940, 330, "#ffe14d", "TOTAL.EXE");
+  g.drawImage(await loadImg(sum >= 0 ? "party" : "rain"), 100, 1530, 190, 190);
+  g.textAlign = "left"; g.fillStyle = "#111"; g.font = F(700, 46); g.fillText("오늘 합계", 320, 1580);
+  g.fillStyle = sum >= 0 ? "#ff2d55" : "#1f5bff"; g.font = F(700, 104); g.fillText(won(sum), 320, 1700);
+  g.textAlign = "center"; g.fillStyle = "#dfe5ff"; g.font = F(400, 30); g.fillText("AI 자동매매 봇 일지", 540, 1850);
+  const blob = await new Promise(ok => c.toBlob(ok, "image/png"));
+  const file = new File([blob], `bot-diary-${d}.png`, { type: "image/png" });
+  if (navigator.canShare?.({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: "봇 매매일지" }); return; } catch (e) { if (e.name === "AbortError") return; }
+  }
+  const url = URL.createObjectURL(blob);
+  $("#shot").src = url; $("#dl").href = url; $("#dl").download = file.name;
+  $("#mmsg").textContent = "저장한 뒤 인스타 스토리에서 이 이미지를 골라 올려 주세요.";
+  $("#modal").classList.add("on");
+}
+
+$("#prev").onclick = () => { if (cur > 0) { cur--; renderToday(); } };
+$("#next").onclick = () => { if (cur < dates.length - 1) { cur++; renderToday(); } };
+$("#share").onclick = () => story().catch(e => { $("#mmsg").textContent = "이미지를 만들지 못했어요: " + e.message; $("#modal").classList.add("on"); });
+$("#close").onclick = () => $("#modal").classList.remove("on");
+document.querySelectorAll(".tab").forEach(b => b.onclick = () => { mkt = b.dataset.m; document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-pressed", t === b)); drawChart(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") $("#modal").classList.remove("on"); if (e.key === "ArrowLeft") $("#prev").click(); if (e.key === "ArrowRight") $("#next").click(); });
+
+fetch("data.json", { cache: "no-store" }).then(r => r.json()).then(j => {
+  D = j; dates = [...new Set(D.days.map(x => x.date))].sort(); cur = dates.length - 1;
+  $("#upd").textContent = `${D.updated} 업데이트`;
+  const last = dates[cur], ls = byDate(last).reduce((a, x) => a + x.pnl, 0), all = D.days.reduce((a, x) => a + x.pnl, 0);
+  const msg = `★ ${fmtD(last)} 합계 ${won(ls)} ★ ` + byDate(last).map(x => `${BOT[x.market].name} ${x.wins}승 ${x.losses}패 ${won(x.pnl)}`).join(" ★ ") + ` ★ 전체 누적 ${won(all)} ★ 키키키 봇은 오늘도 일한다 `;
+  $("#tick").textContent = (msg + "   ").repeat(4);
+  renderScore(); renderToday(); drawChart();
+}).catch(() => { $("#upd").textContent = "기록을 불러오지 못했어요"; });
+}
+</script>
+</body>
+</html>
