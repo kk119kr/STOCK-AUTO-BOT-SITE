@@ -54,8 +54,8 @@
   {
    "date": "2026-11-24",
    "market": "us",
-   "pnl": 25181,
-   "usd": 18.7,
+   "pnl": 24843,
+   "usd": 18.49,
    "wins": 3,
    "losses": 2,
    "capital": 4578440,
@@ -63,30 +63,33 @@
    "trades": [
     {
      "name": "NVDA",
-     "pnl": 30002,
-     "usd": 22.28
+     "usd": 22.71,
+     "pnl": 30513
     },
     {
      "name": "AMD",
-     "pnl": 6235,
-     "usd": 4.63
+     "usd": 4.32,
+     "pnl": 5804
     },
     {
      "name": "MRNA",
-     "pnl": 5292,
-     "usd": 3.93
+     "usd": 4.0,
+     "pnl": 5374
     },
     {
      "name": "INTC",
-     "pnl": -3420,
-     "usd": -2.54
+     "usd": -2.63,
+     "pnl": -3534
     },
     {
      "name": "ADI",
-     "pnl": -12927,
-     "usd": -9.6
+     "usd": -9.93,
+     "pnl": -13342
     }
-   ]
+   ],
+   "confirmed": true,
+   "fee_usd": 46.8,
+   "auto_note": false
   },
   {
    "date": "2026-11-25",
