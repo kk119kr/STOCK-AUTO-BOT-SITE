@@ -48,7 +48,7 @@ h1{font-size:clamp(32px,6vw,52px);line-height:1.05;margin:0;color:#fff;text-shad
 .big{font-weight:700;font-size:clamp(24px,3.6vw,38px);line-height:1.15;white-space:nowrap;margin:6px 0 2px}
 .up{color:var(--up)}.dn{color:var(--dn)}.zero{color:var(--soft)}
 .meta{color:var(--soft);font-size:13px}
-.coin{position:absolute;width:34px;top:-40px;animation:fall linear infinite;z-index:2}
+.coin{position:absolute;width:34px;top:-40px;animation:fall linear infinite;z-index:0}
 @keyframes fall{to{transform:translateY(420px) rotate(540deg)}}
 .ctl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 16px;border-top:3px solid var(--ink)}
 .btn{font:700 15px Galmuri,monospace;border:3px solid var(--ink);background:var(--win);color:var(--ink);padding:8px 14px;min-height:44px;cursor:pointer;box-shadow:4px 4px 0 var(--ink);border-radius:8px}
@@ -84,6 +84,27 @@ h1{font-size:clamp(32px,6vw,52px);line-height:1.05;margin:0;color:#fff;text-shad
 .modal img{width:100%;max-height:60vh;object-fit:contain;border:3px solid var(--ink);border-radius:8px;display:block}
 footer{color:#dfe5ff;font-size:12px}
 footer a{color:#fff}
+.seg3{display:inline-flex;border:3px solid var(--ink);border-radius:999px;overflow:hidden;box-shadow:4px 4px 0 var(--ink);background:var(--win)}
+.seg3 button{font:700 14px Galmuri;border:0;background:transparent;padding:6px 14px;min-height:40px;cursor:pointer}
+.seg3 button[aria-pressed=true]{background:var(--ink);color:var(--lemon)}
+.seg3 button:focus-visible{outline:3px dashed var(--pink);outline-offset:-4px}
+.wk{display:grid;grid-template-columns:64px repeat(5,minmax(0,1fr));gap:8px;align-items:stretch}
+.wk .h{text-align:center;font-weight:700;font-size:14px;padding:4px 0;border-radius:6px}
+.wk .h.today{background:var(--lemon);border:2px solid var(--ink)}
+.wk .who{display:grid;justify-items:center;align-content:center;font-size:12px;font-weight:700}
+.wk .who img{width:40px}
+.cell{border:3px solid var(--ink);border-radius:10px;min-height:86px;display:grid;place-content:center;text-align:center;gap:2px;background:#fff;cursor:pointer;font:inherit;color:var(--ink);padding:4px 2px}
+.cell b{font-size:clamp(22px,3.4vw,34px);line-height:1}
+.cell small{font-size:12px;white-space:nowrap}
+.cell.w{background:#ffd1dc}.cell.w b{color:var(--up)}
+.cell.l{background:#cfe0ff}.cell.l b{color:var(--dn)}
+.cell.off{background:repeating-linear-gradient(45deg,#f1ecdf 0 8px,#e7e0cf 8px 16px);color:var(--soft);cursor:default}
+.cell.fut{border-style:dashed;border-color:#cfc7b2;background:transparent;color:#b8af99;cursor:default}
+.cell.sel{box-shadow:4px 4px 0 var(--ink);transform:translate(-2px,-2px)}
+.cell.dim{opacity:.35}
+.cell:focus-visible{outline:3px dashed var(--pink);outline-offset:2px}
+.wsum{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:12px;font-weight:700}
+@media(max-width:520px){.wk{grid-template-columns:40px repeat(5,minmax(0,1fr));gap:5px}.wk .who span{display:none}.wk .who img{width:32px}.cell{min-height:70px}.cell small{font-size:10px}}
 @media(max-width:780px){.grid2{grid-template-columns:minmax(0,1fr)}.scene{grid-template-columns:minmax(0,1fr)}}
 @media(prefers-reduced-motion:reduce){.tick div,.char img.me,.char .hat,.coin{animation:none}.coin{display:none}}
 </style>
@@ -91,7 +112,12 @@ footer a{color:#fff}
 <body>
 <div class="tick" aria-hidden="true"><div id="tick">★ 불러오는 중 ★</div></div>
 <div class="band"><div class="wrap">
-  <div class="head"><h1>봇 매매일지 98</h1><span class="pill" id="upd">loading…</span></div>
+  <div class="head"><h1>봇 매매일지 98</h1><div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center"><div class="seg3" role="group" aria-label="시장 보기"><button data-m="all" aria-pressed="true">전체</button><button data-m="kr" aria-pressed="false">국장</button><button data-m="us" aria-pressed="false">미장</button></div><span class="pill" id="upd">loading…</span></div></div>
+
+  <section class="win">
+    <div class="tb lemon"><span id="wkT">WEEK.EXE</span><i><button class="btn" id="wPrev" style="min-height:32px;padding:2px 10px;box-shadow:2px 2px 0 var(--ink)" aria-label="지난주">◀</button><button class="btn" id="wNext" style="min-height:32px;padding:2px 10px;box-shadow:2px 2px 0 var(--ink)" aria-label="다음 주">▶</button></i></div>
+    <div class="body"><div class="wk" id="wk"></div><div class="wsum" id="wsum"></div></div>
+  </section>
 
   <section class="win">
     <div class="tb pink"><span id="todayT">TODAY.EXE</span><i><b></b><b></b><b></b></i></div>
@@ -109,7 +135,6 @@ footer a{color:#fff}
   </div>
   <div class="grid2">
     <section class="win"><div class="tb cyan"><span>CHART.EXE · 누적 손익</span><i><b></b><b></b></i></div><div class="body">
-      <div class="tabs" role="group" aria-label="시장 선택"><button class="tab" data-m="all" aria-pressed="true">전체</button><button class="tab" data-m="kr" aria-pressed="false">국장</button><button class="tab" data-m="us" aria-pressed="false">미장</button></div>
       <div class="fig"><svg id="chart" role="img" aria-label="누적 손익 계단 그래프"></svg></div></div></section>
     <section class="win"><div class="tb vio"><span id="lootT">LOOT.TXT</span><i><b></b><b></b></i></div><div class="body"><ul class="loot" id="loot"></ul></div></section>
   </div>
@@ -132,7 +157,12 @@ const cls = n => n > 0 ? "up" : n < 0 ? "dn" : "zero";
 const el = (tag, props = {}, kids = []) => { const e = document.createElement(tag); Object.assign(e, props); kids.forEach(k => e.append(k)); return e; };
 const img = (n, c = "") => el("img", { src: `assets/${n}.png`, alt: "", className: c });
 const BOT = { kr: { name: "국장 봇", char: "robot", col: "#ff8a1f" }, us: { name: "미장 봇", char: "alien", col: "#8b5cff" } };
-let D = { days: [] }, dates = [], cur = 0, mkt = "all";
+let D = { days: [] }, dates = [], cur = 0, mkt = "all", wk0 = null;
+const HOL = { kr: ["2026-12-25", "2026-12-31", "2027-01-01"], us: ["2026-11-26", "2026-12-25", "2027-01-01", "2027-01-18", "2027-02-15"] };
+const iso = t => `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
+const monday = d => { const t = new Date(d + "T00:00:00"); t.setDate(t.getDate() - ((t.getDay() + 6) % 7)); return t; };
+const short = n => { const a = Math.abs(n), s = n > 0 ? "+" : n < 0 ? "−" : ""; return a >= 10000 ? s + (a / 10000).toFixed(a >= 100000 ? 0 : 1) + "만" : s + Math.round(a).toLocaleString("ko-KR"); };
+const mk = x => mkt === "all" || x.market === mkt;
 const byDate = d => D.days.filter(x => x.date === d);
 const pick = (d, m) => D.days.find(x => x.date === d && x.market === m);
 const fmtD = d => { const t = new Date(d + "T00:00:00"); return `${t.getMonth() + 1}월 ${t.getDate()}일 (${"일월화수목금토"[t.getDay()]})`; };
@@ -161,11 +191,40 @@ function renderToday() {
   if (sum > 0) for (let i = 0; i < 10; i++) { const c = img(i % 3 ? "coin" : "sparkles", "coin"); c.style.left = (5 + i * 9.5) + "%"; c.style.animationDuration = (2.6 + (i * 7 % 10) / 4) + "s"; c.style.animationDelay = (-(i * 0.7)) + "s"; $("#scene").append(c); }
   const s = $("#sum"); s.textContent = `오늘 합계 ${won(sum)}`; s.className = cls(sum);
   $("#prev").disabled = cur === 0; $("#next").disabled = cur === dates.length - 1;
-  renderCal(); renderLoot();
+  wk0 = null; renderWeek(); renderCal(); renderLoot();
+}
+function renderWeek() {
+  const m0 = wk0 || monday(dates[cur]), days = [...Array(5)].map((_, i) => { const t = new Date(m0); t.setDate(t.getDate() + i); return iso(t); });
+  const last = dates[dates.length - 1], end = new Date(days[4] + "T00:00:00");
+  $("#wkT").textContent = `WEEK.EXE · ${m0.getMonth() + 1}/${m0.getDate()} ~ ${end.getMonth() + 1}/${end.getDate()}`;
+  const box = $("#wk"); box.replaceChildren(el("div"));
+  days.forEach((d, i) => box.append(el("div", { className: "h" + (d === dates[cur] ? " today" : ""), textContent: `${"월화수목금"[i]} ${+d.slice(8)}` })));
+  const sum = {};
+  for (const m of ["kr", "us"]) {
+    box.append(el("div", { className: "who" }, [img(BOT[m].char), el("span", { textContent: m === "kr" ? "국장" : "미장" })]));
+    let w = 0, l = 0, s = 0;
+    days.forEach(d => {
+      const x = pick(d, m); let c;
+      if (x) {
+        const win = x.pnl >= 0; win ? w++ : l++; s += x.pnl;
+        c = el("button", { className: `cell ${win ? "w" : "l"}${d === dates[cur] ? " sel" : ""}` }, [el("b", { textContent: win ? "승" : "패" }), el("small", { textContent: short(x.pnl) })]);
+        c.setAttribute("aria-label", `${d} ${m === "kr" ? "국장" : "미장"} ${win ? "승" : "패"} ${won(x.pnl)}`);
+        c.onclick = () => { cur = dates.indexOf(d); renderToday(); };
+      } else if (HOL[m].includes(d)) c = el("div", { className: "cell off" }, [el("b", { textContent: "휴" }), el("small", { textContent: "휴장" })]);
+      else if (d > last) c = el("div", { className: "cell fut" }, [el("b", { textContent: "·" }), el("small", { textContent: "예정" })]);
+      else c = el("div", { className: "cell off" }, [el("b", { textContent: "쉼" }), el("small", { textContent: "매매 없음" })]);
+      if (mkt !== "all" && mkt !== m) c.classList.add("dim");
+      box.append(c);
+    });
+    sum[m] = { w, l, s };
+  }
+  $("#wsum").replaceChildren(...["kr", "us"].filter(m => mkt === "all" || mkt === m).map(m => el("span", {}, [`이번 주 ${BOT[m].name} ${sum[m].w}승 ${sum[m].l}패 `, el("span", { className: cls(sum[m].s), textContent: won(sum[m].s) })])));
+  const firstMon = monday(dates[0]), lastMon = monday(last);
+  $("#wPrev").disabled = m0 <= firstMon; $("#wNext").disabled = m0 >= lastMon;
 }
 function renderScore() {
   const box = $("#score"); box.replaceChildren();
-  for (const m of ["kr", "us"]) {
+  for (const m of ["kr", "us"].filter(m => mkt === "all" || mkt === m)) {
     const xs = D.days.filter(x => x.market === m), w = xs.reduce((a, x) => a + x.wins, 0), l = xs.reduce((a, x) => a + x.losses, 0), s = xs.reduce((a, x) => a + x.pnl, 0);
     const seg = el("div", { className: "seg" }); const t = w + l || 1, nW = Math.round(w / t * 12);
     for (let i = 0; i < 12; i++) seg.append(el("span", { style: `background:${i < nW ? "var(--up)" : "var(--dn)"}` }));
@@ -173,8 +232,8 @@ function renderScore() {
       el("div", { className: "meta" }, [`${xs.length}일 중 ${xs.filter(x => x.pnl > 0).length}일 수익 · 누적 `, el("b", { className: cls(s), textContent: won(s) })])]);
     box.append(el("div", { className: "row" }, [img(BOT[m].char), info]));
   }
-  const all = D.days.reduce((a, x) => a + x.pnl, 0);
-  box.append(el("div", { className: "row" }, [img(all >= 0 ? "trophy" : "bomb"), el("div", {}, [el("div", { className: "meta", textContent: "전체 누적 (국장+미장)" }), el("div", { className: "big " + cls(all), textContent: won(all) })])]));
+  const all = D.days.filter(mk).reduce((a, x) => a + x.pnl, 0);
+  box.append(el("div", { className: "row" }, [img(all >= 0 ? "trophy" : "bomb"), el("div", {}, [el("div", { className: "meta", textContent: mkt === "all" ? "전체 누적 (국장+미장)" : `${mkt === "kr" ? "국장" : "미장"} 누적` }), el("div", { className: "big " + cls(all), textContent: won(all) })])]));
 }
 function renderCal() {
   const t = new Date(dates[cur] + "T00:00:00"), y = t.getFullYear(), mo = t.getMonth();
@@ -182,7 +241,7 @@ function renderCal() {
   const box = $("#cal"); box.replaceChildren(...[..."일월화수목금토"].map(c => el("div", { className: "dow", textContent: c })));
   for (let i = 0; i < new Date(y, mo, 1).getDay(); i++) box.append(el("div"));
   for (let i = 1; i <= new Date(y, mo + 1, 0).getDate(); i++) {
-    const k = `${y}-${String(mo + 1).padStart(2, "0")}-${String(i).padStart(2, "0")}`, rows = byDate(k);
+    const k = `${y}-${String(mo + 1).padStart(2, "0")}-${String(i).padStart(2, "0")}`, rows = byDate(k).filter(mk);
     if (!rows.length) { box.append(el("div", { className: "d" }, [el("span", { textContent: i })])); continue; }
     const s = rows.reduce((a, r) => a + r.pnl, 0);
     const b = el("button", { className: `d has ${s >= 0 ? "p" : "l"}${k === dates[cur] ? " sel" : ""}` }, [el("span", { textContent: i }), img(s >= 0 ? "coin" : "rain")]);
@@ -191,7 +250,7 @@ function renderCal() {
   }
 }
 function renderLoot() {
-  const d = dates[cur], xs = byDate(d).flatMap(x => x.trades.map(t => ({ ...t, m: x.market }))).sort((a, b) => b.pnl - a.pnl);
+  const d = dates[cur], xs = byDate(d).filter(mk).flatMap(x => x.trades.map(t => ({ ...t, m: x.market }))).sort((a, b) => b.pnl - a.pnl);
   $("#lootT").textContent = `LOOT.TXT · ${fmtD(d)}`;
   const ul = $("#loot"); ul.replaceChildren();
   if (!xs.length) { ul.append(el("li", { textContent: "이날은 종목별 기록이 없어요", style: "grid-template-columns:1fr" })); return; }
@@ -260,7 +319,9 @@ $("#prev").onclick = () => { if (cur > 0) { cur--; renderToday(); } };
 $("#next").onclick = () => { if (cur < dates.length - 1) { cur++; renderToday(); } };
 $("#share").onclick = () => story().catch(e => { $("#mmsg").textContent = "이미지를 만들지 못했어요: " + e.message; $("#modal").classList.add("on"); });
 $("#close").onclick = () => $("#modal").classList.remove("on");
-document.querySelectorAll(".tab").forEach(b => b.onclick = () => { mkt = b.dataset.m; document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-pressed", t === b)); drawChart(); });
+document.querySelectorAll(".seg3 button").forEach(b => b.onclick = () => { mkt = b.dataset.m; document.querySelectorAll(".seg3 button").forEach(t => t.setAttribute("aria-pressed", t === b)); renderScore(); renderToday(); drawChart(); });
+const shiftWeek = n => { const m0 = wk0 || monday(dates[cur]); wk0 = new Date(m0); wk0.setDate(wk0.getDate() + 7 * n); renderWeek(); };
+$("#wPrev").onclick = () => shiftWeek(-1); $("#wNext").onclick = () => shiftWeek(1);
 document.addEventListener("keydown", e => { if (e.key === "Escape") $("#modal").classList.remove("on"); if (e.key === "ArrowLeft") $("#prev").click(); if (e.key === "ArrowRight") $("#next").click(); });
 
 fetch("data.json", { cache: "no-store" }).then(r => r.json()).then(j => {
