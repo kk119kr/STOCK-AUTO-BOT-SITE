@@ -163,6 +163,8 @@ const iso = t => `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")
 const monday = d => { const t = new Date(d + "T00:00:00"); t.setDate(t.getDate() - ((t.getDay() + 6) % 7)); return t; };
 const short = n => { const a = Math.abs(n), s = n > 0 ? "+" : n < 0 ? "−" : ""; return a >= 10000 ? s + (a / 10000).toFixed(a >= 100000 ? 0 : 1) + "만" : s + Math.round(a).toLocaleString("ko-KR"); };
 const mk = x => mkt === "all" || x.market === mkt;
+const idle = (d, m) => HOL[m].includes(d) ? ["휴장", m === "us" ? "미국 증시 휴장일이에요" : "한국 증시 휴장일이에요"]
+  : d >= todayIn(m) ? ["대기 중", m === "us" ? "한국 시간 23:30 개장 예정" : "09:00 개장 예정"] : ["휴식", "이날은 매매가 없었어요"];
 const todayIn = m => new Intl.DateTimeFormat("en-CA", { timeZone: m === "us" ? "America/New_York" : "Asia/Seoul" }).format(new Date());
 const byDate = d => D.days.filter(x => x.date === d);
 const pick = (d, m) => D.days.find(x => x.date === d && x.market === m);
@@ -185,7 +187,7 @@ function renderToday() {
       card.append(el("div", { className: "big " + cls(x.pnl), textContent: won(x.pnl) }),
         el("div", { className: "meta", textContent: `${x.wins}승 ${x.losses}패 · ${pct >= 0 ? "+" : "−"}${Math.abs(pct).toFixed(2)}%${x.usd != null ? " · $" + x.usd.toFixed(2) : ""}` }),
         el("div", { textContent: x.note || "", style: "font-size:13px;margin-top:4px" }));
-    } else card.append(el("div", { className: "big zero", textContent: "휴식 중" }), el("div", { className: "meta", textContent: "이날은 매매가 없었어요" }));
+    } else { const [a, b] = idle(d, m); card.append(el("div", { className: "big zero", textContent: a }), el("div", { className: "meta", textContent: b })); }
     box.append(ch, card);
   }
   document.querySelectorAll(".coin").forEach(c => c.remove());
@@ -296,7 +298,7 @@ async function story() {
     if (x && x.pnl > 0) g.drawImage(await loadImg("crown"), 200, y + 70, 130, 130);
     if (x && x.pnl < 0) g.drawImage(await loadImg("rain"), 180, y + 60, 160, 160);
     g.textAlign = "left"; g.fillStyle = !x ? "#6b6457" : x.pnl > 0 ? "#ff2d55" : x.pnl < 0 ? "#1f5bff" : "#6b6457";
-    g.font = F(700, 82); g.fillText(x ? won(x.pnl) : "휴식 중", 450, y + 270);
+    g.font = F(700, 82); g.fillText(x ? won(x.pnl) : idle(d, m)[0], 450, y + 270);
     if (x) { g.fillStyle = "#111"; g.font = F(700, 50); g.fillText(`${x.wins}승 ${x.losses}패`, 450, y + 350); g.fillStyle = "#6b6457"; g.font = F(400, 40); g.fillText(`${x.pnl >= 0 ? "+" : ""}${(x.pnl / x.capital * 100).toFixed(2)}%`, 450, y + 410); }
     y += 540;
   }
