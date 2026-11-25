@@ -105,6 +105,9 @@ footer a{color:#fff}
 .cell:focus-visible{outline:3px dashed var(--pink);outline-offset:2px}
 .wsum{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:12px;font-weight:700}
 @media(max-width:520px){.wk{grid-template-columns:40px repeat(5,minmax(0,1fr));gap:5px}.wk .who span{display:none}.wk .who img{width:32px}.cell{min-height:70px}.cell small{font-size:10px}}
+.snd{font:700 13px Galmuri;border:3px solid var(--ink);border-radius:999px;background:var(--win);padding:6px 12px;min-height:40px;cursor:pointer;box-shadow:4px 4px 0 var(--ink)}
+.snd[aria-pressed=true]{background:var(--lime)}
+.snd:focus-visible{outline:3px dashed var(--pink);outline-offset:2px}
 @media(max-width:780px){.grid2{grid-template-columns:minmax(0,1fr)}.scene{grid-template-columns:minmax(0,1fr)}}
 @media(prefers-reduced-motion:reduce){.tick div,.char img.me,.char .hat,.coin{animation:none}.coin{display:none}}
 </style>
@@ -112,7 +115,7 @@ footer a{color:#fff}
 <body>
 <div class="tick" aria-hidden="true"><div id="tick">★ 불러오는 중 ★</div></div>
 <div class="band"><div class="wrap">
-  <div class="head"><h1>봇 매매일지 98</h1><div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center"><div class="seg3" role="group" aria-label="시장 보기"><button data-m="all" aria-pressed="true">전체</button><button data-m="kr" aria-pressed="false">국장</button><button data-m="us" aria-pressed="false">미장</button></div><span class="pill" id="upd">loading…</span></div></div>
+  <div class="head"><h1>봇 매매일지 98</h1><div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center"><div class="seg3" role="group" aria-label="시장 보기"><button data-m="all" aria-pressed="true">전체</button><button data-m="kr" aria-pressed="false">국장</button><button data-m="us" aria-pressed="false">미장</button></div><button class="snd" id="bgmBtn" aria-pressed="false">♪ BGM 끔</button><button class="snd" id="sfxBtn" aria-pressed="false">효과음 끔</button><span class="pill" id="upd">loading…</span></div></div>
 
   <section class="win">
     <div class="tb lemon"><span id="wkT">WEEK.EXE</span><i><button class="btn" id="wPrev" style="min-height:32px;padding:2px 10px;box-shadow:2px 2px 0 var(--ink)" aria-label="지난주">◀</button><button class="btn" id="wNext" style="min-height:32px;padding:2px 10px;box-shadow:2px 2px 0 var(--ink)" aria-label="다음 주">▶</button></i></div>
@@ -170,6 +173,71 @@ const byDate = d => D.days.filter(x => x.date === d);
 const pick = (d, m) => D.days.find(x => x.date === d && x.market === m);
 const fmtD = d => { const t = new Date(d + "T00:00:00"); return `${t.getMonth() + 1}월 ${t.getDate()}일 (${"일월화수목금토"[t.getDay()]})`; };
 
+// ---- sound: 8-bit chiptune BGM + effects, synthesized with Web Audio (no audio files)
+const Snd = (() => {
+  let ctx = null, bgmG, sfxG, timer = null, step = 0, next = 0;
+  const ensure = () => {
+    if (!ctx) {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const master = ctx.createGain(); master.gain.value = .55; master.connect(ctx.destination);
+      bgmG = ctx.createGain(); bgmG.gain.value = .16; bgmG.connect(master);
+      sfxG = ctx.createGain(); sfxG.gain.value = .32; sfxG.connect(master);
+    }
+    if (ctx.state === "suspended") ctx.resume();
+    return ctx;
+  };
+  const hz = n => 440 * 2 ** ((n - 69) / 12);
+  const tone = (f, t, d, type = "square", out = sfxG, vol = 1) => {
+    const o = ctx.createOscillator(), a = ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    a.gain.setValueAtTime(vol, t); a.gain.exponentialRampToValueAtTime(.001, t + d);
+    o.connect(a); a.connect(out); o.start(t); o.stop(t + d + .03);
+  };
+  const hat = (t) => {
+    const len = Math.floor(ctx.sampleRate * .04), b = ctx.createBuffer(1, len, ctx.sampleRate), ch = b.getChannelData(0);
+    for (let i = 0; i < len; i++) ch[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const s = ctx.createBufferSource(), a = ctx.createGain(); a.gain.value = .25; s.buffer = b; s.connect(a); a.connect(bgmG); s.start(t);
+  };
+  // 4 bars of eighth notes (0 = rest): bouncy C-major loop
+  const LEAD = [72,0,76,79, 0,76,74,0, 72,0,76,79, 84,0,83,0, 81,0,77,81, 0,77,76,0, 74,0,77,76, 74,0,71,0];
+  const BASS = [48,48,55,55, 53,53,55,55, 48,48,55,55, 53,53,55,55];
+  const sched = () => {
+    const e = 60 / 138 / 2;
+    while (next < ctx.currentTime + .2) {
+      const i = step % 32, n = LEAD[i];
+      if (n) tone(hz(n), next, e * .85, "square", bgmG, .55);
+      if (i % 2 === 0) tone(hz(BASS[(i / 2) % 16]), next, e * 1.7, "triangle", bgmG, 1);
+      if (i % 2 === 1) hat(next);
+      next += e; step++;
+    }
+  };
+  let bgmOn = false, sfxOn = false;
+  return {
+    get bgm() { return bgmOn; }, get sfx() { return sfxOn; },
+    setBgm(on) { bgmOn = on; clearInterval(timer); timer = null; if (on) { ensure(); next = ctx.currentTime + .08; timer = setInterval(sched, 60); } },
+    setSfx(on) { sfxOn = on; if (on) ensure(); },
+    pause(p) { if (!ctx) return; p ? ctx.suspend() : ctx.resume(); },
+    click() { if (!sfxOn) return; ensure(); tone(1046, ctx.currentTime, .05); },
+    coin() { if (!sfxOn) return; const t = ensure().currentTime; tone(988, t, .09); tone(1319, t + .09, .35); },
+    sad() { if (!sfxOn) return; const t = ensure().currentTime; [392, 370, 349, 311].forEach((f, i) => tone(f, t + i * .17, .24, "triangle")); },
+    boot() { if (!sfxOn) return; const t = ensure().currentTime; [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, t + i * .08, .16)); }
+  };
+})();
+let userNav = false, soundDay = "";
+document.addEventListener("click", e => { if (e.target.closest("button,a")) { userNav = true; setTimeout(() => userNav = false, 0); if (!e.target.closest(".snd")) Snd.click(); } }, true);
+document.addEventListener("visibilitychange", () => Snd.pause(document.hidden));
+const savePref = () => { try { localStorage.setItem("botdiary-sound", JSON.stringify({ bgm: Snd.bgm, sfx: Snd.sfx })); } catch (e) {} };
+const syncBtns = () => {
+  $("#bgmBtn").setAttribute("aria-pressed", Snd.bgm); $("#bgmBtn").textContent = Snd.bgm ? "♪ BGM 켬" : "♪ BGM 끔";
+  $("#sfxBtn").setAttribute("aria-pressed", Snd.sfx); $("#sfxBtn").textContent = Snd.sfx ? "효과음 켬" : "효과음 끔";
+};
+$("#bgmBtn").onclick = () => { Snd.setBgm(!Snd.bgm); syncBtns(); savePref(); };
+$("#sfxBtn").onclick = () => { Snd.setSfx(!Snd.sfx); syncBtns(); savePref(); Snd.boot(); };
+try {   // 지난번 설정 기억: 브라우저 정책상 화면을 한 번 누른 뒤에 소리가 시작됨
+  const pref = JSON.parse(localStorage.getItem("botdiary-sound") || "{}");
+  if (pref.bgm || pref.sfx) document.addEventListener("pointerdown", () => { if (pref.sfx) Snd.setSfx(true); if (pref.bgm) Snd.setBgm(true); syncBtns(); }, { once: true });
+} catch (e) {}
+
 function renderToday() {
   const d = dates[cur], day = byDate(d), sum = day.reduce((a, x) => a + x.pnl, 0);
   $("#todayT").textContent = `TODAY.EXE · ${fmtD(d)}`;
@@ -195,6 +263,8 @@ function renderToday() {
   const s = $("#sum"); s.textContent = `오늘 합계 ${won(sum)}`; s.className = cls(sum);
   $("#prev").disabled = cur === 0; $("#next").disabled = cur === dates.length - 1;
   wk0 = null; renderWeek(); renderCal(); renderLoot();
+  if (userNav && d !== soundDay) { sum > 0 ? Snd.coin() : sum < 0 ? Snd.sad() : 0; }
+  soundDay = d;
 }
 function renderWeek() {
   const m0 = wk0 || monday(dates[cur]), days = [...Array(5)].map((_, i) => { const t = new Date(m0); t.setDate(t.getDate() + i); return iso(t); });
