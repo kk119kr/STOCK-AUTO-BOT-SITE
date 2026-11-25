@@ -163,6 +163,7 @@ const iso = t => `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")
 const monday = d => { const t = new Date(d + "T00:00:00"); t.setDate(t.getDate() - ((t.getDay() + 6) % 7)); return t; };
 const short = n => { const a = Math.abs(n), s = n > 0 ? "+" : n < 0 ? "−" : ""; return a >= 10000 ? s + (a / 10000).toFixed(a >= 100000 ? 0 : 1) + "만" : s + Math.round(a).toLocaleString("ko-KR"); };
 const mk = x => mkt === "all" || x.market === mkt;
+const todayIn = m => new Intl.DateTimeFormat("en-CA", { timeZone: m === "us" ? "America/New_York" : "Asia/Seoul" }).format(new Date());
 const byDate = d => D.days.filter(x => x.date === d);
 const pick = (d, m) => D.days.find(x => x.date === d && x.market === m);
 const fmtD = d => { const t = new Date(d + "T00:00:00"); return `${t.getMonth() + 1}월 ${t.getDate()}일 (${"일월화수목금토"[t.getDay()]})`; };
@@ -211,7 +212,7 @@ function renderWeek() {
         c.setAttribute("aria-label", `${d} ${m === "kr" ? "국장" : "미장"} ${win ? "승" : "패"} ${won(x.pnl)}`);
         c.onclick = () => { cur = dates.indexOf(d); renderToday(); };
       } else if (HOL[m].includes(d)) c = el("div", { className: "cell off" }, [el("b", { textContent: "휴" }), el("small", { textContent: "휴장" })]);
-      else if (d > last) c = el("div", { className: "cell fut" }, [el("b", { textContent: "·" }), el("small", { textContent: "예정" })]);
+      else if (d >= todayIn(m)) c = el("div", { className: "cell fut" }, [el("b", { textContent: "·" }), el("small", { textContent: "예정" })]);
       else c = el("div", { className: "cell off" }, [el("b", { textContent: "쉼" }), el("small", { textContent: "매매 없음" })]);
       if (mkt !== "all" && mkt !== m) c.classList.add("dim");
       box.append(c);
