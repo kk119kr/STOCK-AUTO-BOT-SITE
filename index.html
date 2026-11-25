@@ -74,6 +74,12 @@ body.battle .tick{background:#ff4fa3;color:#fff}
 .char .wx{position:absolute;width:56%;left:22%;top:-34%}
 .card{background:var(--win);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--ink);border-radius:10px;padding:10px 12px;transform:rotate(-1.5deg)}
 .bot:nth-child(2) .card{transform:rotate(1.5deg)}
+.stg-btn{margin-top:8px;font:inherit;font-size:13px;font-weight:700;background:#ffe14d;border:2px solid var(--ink);border-radius:999px;padding:3px 12px;box-shadow:2px 2px 0 var(--ink);cursor:pointer;color:var(--ink)}
+.stg-btn:active{transform:translate(2px,2px);box-shadow:none}
+.stg{margin-top:8px;padding:8px 10px;background:#fff;border:2px dashed var(--ink);border-radius:8px;font-size:13px;line-height:1.55}
+.stg p{margin:0 0 6px}.stg b{font-size:12px}
+.stg ul{margin:4px 0 0;padding:0;list-style:none}.stg li{margin:3px 0;color:#444}
+.stg li span{display:inline-block;background:var(--ink);color:#fff;border-radius:4px;padding:0 5px;font-size:11px;margin-right:2px}
 .lab{display:inline-block;font-weight:700;font-size:13px;border:2px solid var(--ink);border-radius:6px;padding:0 8px}
 .big{font-weight:700;font-size:clamp(24px,3.6vw,38px);line-height:1.15;white-space:nowrap;margin:6px 0 2px}
 .up{color:var(--up)}.dn{color:var(--dn)}.zero{color:var(--soft)}
@@ -297,6 +303,15 @@ function renderToday() {
       card.append(el("div", { className: "big " + cls(x.pnl), textContent: won(x.pnl) }),
         el("div", { className: "meta", textContent: `${x.wins}승 ${x.losses}패 · ${pct >= 0 ? "+" : "−"}${Math.abs(pct).toFixed(2)}%${x.usd != null ? " · $" + x.usd.toFixed(2) : ""}` }),
         el("div", { textContent: x.note || "", style: "font-size:13px;margin-top:4px" }));
+      if (x.strategy && x.strategy.summary) {
+        const box = el("div", { className: "stg", hidden: true }, [
+          el("p", { textContent: x.strategy.summary }),
+          ...(x.strategy.views || []).length ? [el("b", { textContent: "장중 판단 흐름" }),
+            el("ul", {}, x.strategy.views.map(([tm, v]) => el("li", {}, [el("span", { textContent: tm }), document.createTextNode(" " + v)])))] : []]);
+        const btn = el("button", { className: "stg-btn", textContent: "전략 보기 ▾" });
+        btn.onclick = () => { box.hidden = !box.hidden; btn.textContent = box.hidden ? "전략 보기 ▾" : "전략 접기 ▴"; };
+        card.append(btn, box);
+      }
     } else if (fight) card.append(el("div", { className: "big live", textContent: "전투 중!" }), el("div", { className: "meta", textContent: "장중 매매 중 · 결과는 장 마감 뒤에 올라와요" }));
     else { const [a, b] = idle(d, m); card.append(el("div", { className: "big zero", textContent: a }), el("div", { className: "meta", textContent: b })); }
     box.append(ch, card);
