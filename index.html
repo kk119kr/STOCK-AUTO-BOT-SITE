@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>봇 매매일지 98</title>
 <meta name="description" content="국장·미장 자동매매 봇의 하루 성적표">
-<link rel="icon" href="assets/robot.png">
+<link rel="icon" href="assets/tiger.webp">
 <style>
 /* VOICE occasion: a loud, fancy Y2K retro desktop — my two trading bots live inside an old OS
    IDEA the page is a 98-style desktop with colourful program windows; each window is one part of the report
-   PICTURE TODAY.EXE: a 3D robot (KR bot) and alien (US bot) floating over a sticker scene with confetti or rain
+   PICTURE TODAY.EXE: 민화 까치호랑이(국장)와 엉클 샘(미장) 스티커가 무대에 서 있고, 장중엔 전투 연출, 끝나면 왕관/비
    COLOUR cobalt desk with grid, cream windows, title bars in hot pink, lime, tangerine, cyan, violet, lemon; black outlines; red up / blue down for money
    TYPE Galmuri11 (Korean pixel font) everywhere, bold for numbers
    LAYOUT ticker, title row, TODAY window full width, then SCORE + CALENDAR, CHART + LOOT; phone stacks */
@@ -40,6 +40,36 @@ h1{font-size:clamp(32px,6vw,52px);line-height:1.05;margin:0;color:#fff;text-shad
 .char img.me{width:100%;height:100%;object-fit:contain;filter:drop-shadow(5px 6px 0 rgba(0,0,0,.25));animation:bob 2.4s ease-in-out infinite}
 .bot:nth-child(2) .char img.me{animation-delay:-1.2s}
 @keyframes bob{50%{transform:translateY(-10px) rotate(-3deg)}}
+.char .pt{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none}
+.char .rig{position:absolute;inset:0;filter:drop-shadow(5px 6px 0 rgba(0,0,0,.25));animation:bob 2.4s ease-in-out infinite}
+.bot:nth-child(2) .char .rig{animation-delay:-1.2s}
+.char .rig img.me{filter:none;animation:none}
+.c-tiger .pt{transform-origin:30% 55%;animation:nod 3.2s ease-in-out infinite}
+.c-sam .pt{transform-origin:40% 57%;animation:jab 2.8s ease-in-out infinite}
+@keyframes nod{0%,100%{transform:rotate(0)}40%{transform:rotate(-5deg)}55%{transform:rotate(3deg)}}
+@keyframes jab{0%,70%,100%{transform:scale(1)}78%{transform:scale(1.16)}86%{transform:scale(1.04)}}
+.char.won .rig{animation:hop .9s cubic-bezier(.3,1.6,.5,1) infinite}
+@keyframes hop{0%,100%{transform:translateY(0) scale(1,1)}20%{transform:translateY(0) scale(1.06,.92)}55%{transform:translateY(-22px) scale(.96,1.05) rotate(-3deg)}}
+.char.lost .rig{animation:sulk 3s ease-in-out infinite;filter:drop-shadow(5px 6px 0 rgba(0,0,0,.25)) saturate(.6) brightness(.92)}
+@keyframes sulk{0%,100%{transform:translateY(4px) rotate(2deg)}50%{transform:translateY(8px) rotate(4deg)}}
+.char.wait .rig{filter:drop-shadow(5px 6px 0 rgba(0,0,0,.25)) grayscale(.65);opacity:.9}
+.char.fight .rig{animation:lunge .7s steps(2,end) infinite}
+#kr .char.fight .rig{--dir:1}#us .char.fight .rig{--dir:-1}
+@keyframes lunge{0%{transform:translate(0,0) rotate(0)}25%{transform:translate(calc(var(--dir)*14px),-6px) rotate(calc(var(--dir)*4deg))}50%{transform:translate(calc(var(--dir)*-4px),2px) rotate(calc(var(--dir)*-3deg))}75%{transform:translate(calc(var(--dir)*8px),-3px) rotate(calc(var(--dir)*2deg))}}
+.char.fight .pt{animation-duration:.55s}
+.scene.battle{animation:alarm .5s steps(2) infinite}
+@keyframes alarm{50%{box-shadow:inset 0 0 0 6px #ff2d55}}
+.scene.battle::after{content:"VS";position:absolute;left:50%;top:13%;transform:translate(-50%,-50%) rotate(-8deg);font:700 clamp(34px,7vw,64px)/1 Galmuri,monospace;color:#ffe14d;-webkit-text-stroke:3px #111;text-shadow:5px 5px 0 #111;z-index:2;animation:vs .35s steps(2) infinite;pointer-events:none}
+@keyframes vs{50%{transform:translate(-50%,-50%) rotate(-8deg) scale(1.18);color:#ff4fa3}}
+@media(max-width:780px){.scene.battle::after{top:50%}}
+.fx{position:absolute;width:70px;z-index:3;pointer-events:none;animation:pop .6s ease-out forwards}
+@keyframes pop{0%{transform:scale(.2) rotate(-20deg);opacity:1}60%{transform:scale(1.25) rotate(10deg);opacity:1}100%{transform:scale(1.4);opacity:0}}
+.big.live{color:#ff2d55;animation:blink .5s steps(2) infinite}
+@keyframes blink{50%{opacity:.25}}
+.cell.fight .sw{width:30px;height:30px}
+.cell.fight{background:#ffe14d;border-style:solid;color:var(--ink);animation:blink .6s steps(2) infinite;cursor:default}
+body.battle .tick div{animation-duration:9s}
+body.battle .tick{background:#ff4fa3;color:#fff}
 .char .hat{position:absolute;width:42%;left:29%;top:-18%;animation:bob 2.4s ease-in-out infinite}
 .char .wx{position:absolute;width:56%;left:22%;top:-34%}
 .card{background:var(--win);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--ink);border-radius:10px;padding:10px 12px;transform:rotate(-1.5deg)}
@@ -109,7 +139,8 @@ footer a{color:#fff}
 .snd[aria-pressed=true]{background:var(--lime)}
 .snd:focus-visible{outline:3px dashed var(--pink);outline-offset:2px}
 @media(max-width:780px){.grid2{grid-template-columns:minmax(0,1fr)}.scene{grid-template-columns:minmax(0,1fr)}}
-@media(prefers-reduced-motion:reduce){.tick div,.char img.me,.char .hat,.coin{animation:none}.coin{display:none}}
+@media(prefers-reduced-motion:reduce){.tick div,.char img.me,.char .hat,.coin,.char .rig,.char .pt,.scene.battle,.scene.battle::after,.big.live,.cell.fight .sw{width:30px;height:30px}
+.cell.fight{animation:none!important}.coin,.fx{display:none}}
 </style>
 </head>
 <body>
@@ -142,7 +173,7 @@ footer a{color:#fff}
     <section class="win"><div class="tb vio"><span id="lootT">LOOT.TXT</span><i><b></b><b></b></i></div><div class="body"><ul class="loot" id="loot"></ul></div></section>
   </div>
   <footer>미장 금액은 봇 추정치(수수료 반영)를 그날 환율로 원화 환산했어요. 실제 체결·수수료는 한투 앱 기준.<br>
-  캐릭터·아이콘 <a href="https://github.com/microsoft/fluentui-emoji">Microsoft Fluent Emoji</a> (MIT) · 글꼴 <a href="https://github.com/quiple/galmuri">Galmuri</a> (OFL)</footer>
+  캐릭터 조선 민화 「까치호랑이」(작자 미상) · 「I Want You」 엉클 샘(James Montgomery Flagg, 1917, 퍼블릭 도메인) · 아이콘 <a href="https://github.com/microsoft/fluentui-emoji">Microsoft Fluent Emoji</a> (MIT) · 글꼴 <a href="https://github.com/quiple/galmuri">Galmuri</a> (OFL)</footer>
 </div></div>
 
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="스토리 이미지">
@@ -158,8 +189,15 @@ const $ = s => document.querySelector(s);
 const won = n => (n > 0 ? "+" : n < 0 ? "−" : "") + Math.abs(Math.round(n)).toLocaleString("ko-KR") + "원";
 const cls = n => n > 0 ? "up" : n < 0 ? "dn" : "zero";
 const el = (tag, props = {}, kids = []) => { const e = document.createElement(tag); Object.assign(e, props); kids.forEach(k => e.append(k)); return e; };
-const img = (n, c = "") => el("img", { src: `assets/${n}.png`, alt: "", className: c });
-const BOT = { kr: { name: "국장 봇", char: "robot", col: "#ff8a1f" }, us: { name: "미장 봇", char: "alien", col: "#8b5cff" } };
+const src = n => `assets/${n.includes(".") ? n : n + ".png"}`;
+const img = (n, c = "") => el("img", { src: src(n), alt: "", className: c });
+const BOT = { kr: { name: "국장 봇", char: "tiger.webp", part: "tiger_head.webp", rig: "c-tiger", col: "#ff8a1f" }, us: { name: "미장 봇", char: "sam.webp", part: "sam_hand.webp", rig: "c-sam", col: "#8b5cff" } };
+// 장 열림 여부(현지 시간 기준). 미장 반일장은 13:00 마감
+const HALF = { us: ["2026-11-27", "2026-12-24", "2027-11-26"] };
+const clock = m => { const p = Object.fromEntries(new Intl.DateTimeFormat("en-CA", { timeZone: m === "us" ? "America/New_York" : "Asia/Seoul", hour12: false, weekday: "short", hour: "2-digit", minute: "2-digit" }).formatToParts(new Date()).map(x => [x.type, x.value])); return { wd: p.weekday, min: (+p.hour % 24) * 60 + +p.minute }; };
+const session = m => { const d = todayIn(m), c = clock(m); if (["Sat", "Sun"].includes(c.wd) || HOL[m].includes(d)) return "closed";
+  const [o, e] = m === "us" ? [570, (HALF.us.includes(d) ? 780 : 960)] : [540, 930]; return c.min < o ? "pre" : c.min < e ? "open" : "done"; };
+const fighting = (d, m) => d === todayIn(m) && session(m) === "open" && !pick(d, m);
 let D = { days: [] }, dates = [], cur = 0, mkt = "all", wk0 = null;
 const HOL = { kr: ["2026-12-25", "2026-12-31", "2027-01-01"], us: ["2026-11-26", "2026-12-25", "2027-01-01", "2027-01-18", "2027-02-15"] };
 const iso = t => `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
@@ -167,7 +205,8 @@ const monday = d => { const t = new Date(d + "T00:00:00"); t.setDate(t.getDate()
 const short = n => { const a = Math.abs(n), s = n > 0 ? "+" : n < 0 ? "−" : ""; return a >= 10000 ? s + (a / 10000).toFixed(a >= 100000 ? 0 : 1) + "만" : s + Math.round(a).toLocaleString("ko-KR"); };
 const mk = x => mkt === "all" || x.market === mkt;
 const idle = (d, m) => HOL[m].includes(d) ? ["휴장", m === "us" ? "미국 증시 휴장일이에요" : "한국 증시 휴장일이에요"]
-  : d >= todayIn(m) ? ["대기 중", m === "us" ? "한국 시간 23:30 개장 예정" : "09:00 개장 예정"] : ["휴식", "이날은 매매가 없었어요"];
+  : d > todayIn(m) || (d === todayIn(m) && session(m) === "pre") ? ["대기 중", m === "us" ? "한국 시간 23:30 개장 예정 (서머타임 22:30)" : "09:00 개장 예정"]
+  : d === todayIn(m) && session(m) === "done" ? ["정산 중", "장 마감, 결과를 올리는 중이에요"] : ["휴식", "이날은 매매가 없었어요"];
 const todayIn = m => new Intl.DateTimeFormat("en-CA", { timeZone: m === "us" ? "America/New_York" : "Asia/Seoul" }).format(new Date());
 const byDate = d => D.days.filter(x => x.date === d);
 const pick = (d, m) => D.days.find(x => x.date === d && x.market === m);
@@ -175,7 +214,7 @@ const fmtD = d => { const t = new Date(d + "T00:00:00"); return `${t.getMonth() 
 
 // ---- sound: 8-bit chiptune BGM + effects, synthesized with Web Audio (no audio files)
 const Snd = (() => {
-  let ctx = null, bgmG, sfxG, timer = null, step = 0, next = 0;
+  let ctx = null, bgmG, sfxG, timer = null, step = 0, next = 0, bpm = 138;
   const ensure = () => {
     if (!ctx) {
       ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -202,7 +241,7 @@ const Snd = (() => {
   const LEAD = [72,0,76,79, 0,76,74,0, 72,0,76,79, 84,0,83,0, 81,0,77,81, 0,77,76,0, 74,0,77,76, 74,0,71,0];
   const BASS = [48,48,55,55, 53,53,55,55, 48,48,55,55, 53,53,55,55];
   const sched = () => {
-    const e = 60 / 138 / 2;
+    const e = 60 / bpm / 2;
     while (next < ctx.currentTime + .2) {
       const i = step % 32, n = LEAD[i];
       if (n) tone(hz(n), next, e * .85, "square", bgmG, .55);
@@ -218,12 +257,14 @@ const Snd = (() => {
     setSfx(on) { sfxOn = on; if (on) ensure(); },
     pause(p) { if (!ctx) return; p ? ctx.suspend() : ctx.resume(); },
     click() { if (!sfxOn) return; ensure(); tone(1046, ctx.currentTime, .05); },
+    tempo(b) { bpm = b; },
+    hit() { if (!sfxOn || !ctx) return; const t = ctx.currentTime; tone(160, t, .12, "sawtooth", sfxG, .5); tone(90, t + .03, .18, "square", sfxG, .4); },
     coin() { if (!sfxOn) return; const t = ensure().currentTime; tone(988, t, .09); tone(1319, t + .09, .35); },
     sad() { if (!sfxOn) return; const t = ensure().currentTime; [392, 370, 349, 311].forEach((f, i) => tone(f, t + i * .17, .24, "triangle")); },
     boot() { if (!sfxOn) return; const t = ensure().currentTime; [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, t + i * .08, .16)); }
   };
 })();
-let userNav = false, soundDay = "";
+let userNav = false, soundDay = "", fxTimer = null;
 document.addEventListener("click", e => { if (e.target.closest("button,a")) { userNav = true; setTimeout(() => userNav = false, 0); if (!e.target.closest(".snd")) Snd.click(); } }, true);
 document.addEventListener("visibilitychange", () => Snd.pause(document.hidden));
 const savePref = () => { try { localStorage.setItem("botdiary-sound", JSON.stringify({ bgm: Snd.bgm, sfx: Snd.sfx })); } catch (e) {} };
@@ -243,10 +284,11 @@ function renderToday() {
   $("#todayT").textContent = `TODAY.EXE · ${fmtD(d)}`;
   for (const m of ["kr", "us"]) {
     const x = pick(d, m), box = $("#" + m); box.replaceChildren();
-    const ch = el("div", { className: "char" }, [img(BOT[m].char, "me")]);
+    const fight = !x && fighting(d, m);
+    const ch = el("div", { className: `char ${BOT[m].rig} ${fight ? "fight" : !x ? "wait" : x.pnl > 0 ? "won" : x.pnl < 0 ? "lost" : ""}` },
+      [el("div", { className: "rig" }, [img(BOT[m].char, "me"), img(BOT[m].part, "pt")])]);
     if (x && x.pnl > 0) ch.append(img("crown", "hat"));
     if (x && x.pnl < 0) ch.append(img("rain", "wx"));
-    if (!x) ch.firstChild.style.opacity = ".45";
     const card = el("div", { className: "card" });
     const lab = el("span", { className: "lab", textContent: BOT[m].name }); lab.style.background = BOT[m].col; lab.style.color = "#fff";
     card.append(lab);
@@ -255,10 +297,20 @@ function renderToday() {
       card.append(el("div", { className: "big " + cls(x.pnl), textContent: won(x.pnl) }),
         el("div", { className: "meta", textContent: `${x.wins}승 ${x.losses}패 · ${pct >= 0 ? "+" : "−"}${Math.abs(pct).toFixed(2)}%${x.usd != null ? " · $" + x.usd.toFixed(2) : ""}` }),
         el("div", { textContent: x.note || "", style: "font-size:13px;margin-top:4px" }));
-    } else { const [a, b] = idle(d, m); card.append(el("div", { className: "big zero", textContent: a }), el("div", { className: "meta", textContent: b })); }
+    } else if (fight) card.append(el("div", { className: "big live", textContent: "전투 중!" }), el("div", { className: "meta", textContent: "장중 매매 중 · 결과는 장 마감 뒤에 올라와요" }));
+    else { const [a, b] = idle(d, m); card.append(el("div", { className: "big zero", textContent: a }), el("div", { className: "meta", textContent: b })); }
     box.append(ch, card);
   }
   document.querySelectorAll(".coin").forEach(c => c.remove());
+  const war = ["kr", "us"].filter(m => fighting(d, m));
+  $("#scene").classList.toggle("battle", war.length > 0); document.body.classList.toggle("battle", war.length > 0);
+  clearInterval(fxTimer); fxTimer = null;
+  if (war.length && !matchMedia("(prefers-reduced-motion: reduce)").matches) fxTimer = setInterval(() => {
+    const sc = $("#scene"), f = img(["boom", "swords", "zap", "boom", "fire"][Math.random() * 5 | 0], "fx");
+    f.style.left = (8 + Math.random() * 78) + "%"; f.style.top = (6 + Math.random() * 60) + "%";
+    sc.append(f); setTimeout(() => f.remove(), 650); if (Math.random() < .3) Snd.hit();
+  }, 520);
+  Snd.tempo(war.length ? 176 : 138);
   if (sum > 0) for (let i = 0; i < 10; i++) { const c = img(i % 3 ? "coin" : "sparkles", "coin"); c.style.left = (5 + i * 9.5) + "%"; c.style.animationDuration = (2.6 + (i * 7 % 10) / 4) + "s"; c.style.animationDelay = (-(i * 0.7)) + "s"; $("#scene").append(c); }
   const s = $("#sum"); s.textContent = `오늘 합계 ${won(sum)}`; s.className = cls(sum);
   $("#prev").disabled = cur === 0; $("#next").disabled = cur === dates.length - 1;
@@ -284,7 +336,8 @@ function renderWeek() {
         c.setAttribute("aria-label", `${d} ${m === "kr" ? "국장" : "미장"} ${win ? "승" : "패"} ${won(x.pnl)}`);
         c.onclick = () => { cur = dates.indexOf(d); renderToday(); };
       } else if (HOL[m].includes(d)) c = el("div", { className: "cell off" }, [el("b", { textContent: "휴" }), el("small", { textContent: "휴장" })]);
-      else if (d >= todayIn(m)) c = el("div", { className: "cell fut" }, [el("b", { textContent: "·" }), el("small", { textContent: "예정" })]);
+      else if (fighting(d, m)) c = el("div", { className: "cell fight" }, [img("swords", "sw"), el("small", { textContent: "전투 중" })]);
+      else if (d >= todayIn(m)) c = el("div", { className: "cell fut" }, [el("b", { textContent: "·" }), el("small", { textContent: d === todayIn(m) && session(m) === "done" ? "정산 중" : "예정" })]);
       else c = el("div", { className: "cell off" }, [el("b", { textContent: "쉼" }), el("small", { textContent: "매매 없음" })]);
       if (mkt !== "all" && mkt !== m) c.classList.add("dim");
       box.append(c);
@@ -333,8 +386,9 @@ function renderLoot() {
 }
 const svg = $("#chart");
 function drawChart() {
-  const W = svg.clientWidth, H = svg.clientHeight; if (!W || !dates.length) return;
-  let acc = 0; const s = dates.map(d => acc += byDate(d).filter(x => mkt === "all" || x.market === mkt).reduce((a, x) => a + x.pnl, 0));
+  const W = svg.clientWidth, H = svg.clientHeight; if (!W || !dates.some(d => byDate(d).length)) return;
+  const cd = dates.filter(d => byDate(d).length);
+  let acc = 0; const s = cd.map(d => acc += byDate(d).filter(x => mkt === "all" || x.market === mkt).reduce((a, x) => a + x.pnl, 0));
   const L = 10, R = W < 440 ? 92 : 120, T = 22, B = 28, lo = Math.min(0, ...s), hi = Math.max(0, ...s), sp = hi - lo || 1;
   const X = i => L + (s.length < 2 ? (W - L - R) / 2 : i * (W - L - R) / (s.length - 1)), Y = v => T + (hi - v) / sp * (H - T - B);
   const col = mkt === "kr" ? "#ff8a1f" : mkt === "us" ? "#8b5cff" : "#ff4fa3";
@@ -343,12 +397,12 @@ function drawChart() {
   const ns = "http://www.w3.org/2000/svg";
   svg.innerHTML = `<path d="${area}" fill="${col}" opacity=".25"/><path d="${p}" fill="none" stroke="#111" stroke-width="7" stroke-linejoin="round"/><path d="${p}" fill="none" stroke="${col}" stroke-width="4" stroke-linejoin="round"/><line x1="${L}" x2="${W - R + 10}" y1="${Y(0)}" y2="${Y(0)}" stroke="#111" stroke-dasharray="5 5" opacity=".5"/>`;
   s.forEach((v, i) => { const r = document.createElementNS(ns, "rect"); Object.entries({ x: X(i) - 6, y: Y(v) - 6, width: 12, height: 12, fill: "#ffe14d", stroke: "#111", "stroke-width": 3 }).forEach(([k, val]) => r.setAttribute(k, val)); svg.append(r);
-    if (W >= 440 || i % 2 === 0 || i === s.length - 1) { const t = document.createElementNS(ns, "text"); t.setAttribute("x", X(i)); t.setAttribute("y", H - 6); t.setAttribute("text-anchor", "middle"); t.setAttribute("font-size", "13"); t.textContent = `${+dates[i].slice(5, 7)}/${+dates[i].slice(8)}`; svg.append(t); } });
+    if (W >= 440 || i % 2 === 0 || i === s.length - 1) { const t = document.createElementNS(ns, "text"); t.setAttribute("x", X(i)); t.setAttribute("y", H - 6); t.setAttribute("text-anchor", "middle"); t.setAttribute("font-size", "13"); t.textContent = `${+cd[i].slice(5, 7)}/${+cd[i].slice(8)}`; svg.append(t); } });
   const t = document.createElementNS(ns, "text"); t.setAttribute("x", X(s.length - 1) + 12); t.setAttribute("y", Y(lv) + 5); t.setAttribute("font-size", "15"); t.setAttribute("font-weight", "700"); t.setAttribute("fill", lv >= 0 ? "#ff2d55" : "#1f5bff"); t.textContent = won(lv); svg.append(t);
 }
 const ro = new ResizeObserver(drawChart); ro.observe(svg);
 
-const loadImg = n => new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = `assets/${n}.png`; });
+const loadImg = n => new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = src(n); });
 async function story() {
   await document.fonts.ready;
   const d = dates[cur], day = byDate(d), sum = day.reduce((a, x) => a + x.pnl, 0);
@@ -398,9 +452,13 @@ $("#wPrev").onclick = () => shiftWeek(-1); $("#wNext").onclick = () => shiftWeek
 document.addEventListener("keydown", e => { if (e.key === "Escape") $("#modal").classList.remove("on"); if (e.key === "ArrowLeft") $("#prev").click(); if (e.key === "ArrowRight") $("#next").click(); });
 
 fetch("data.json", { cache: "no-store" }).then(r => r.json()).then(j => {
-  D = j; dates = [...new Set(D.days.map(x => x.date))].sort(); cur = dates.length - 1;
+  D = j; dates = [...new Set(D.days.map(x => x.date))].sort();
+  const addLive = () => { let added = false; for (const m of ["kr", "us"]) { const t = todayIn(m); if (["open", "done"].includes(session(m)) && !dates.includes(t)) { dates.push(t); added = true; } } dates.sort(); return added; };
+  addLive(); cur = dates.length - 1;
   $("#upd").textContent = `${D.updated} 업데이트`;
-  const last = dates[cur], ls = byDate(last).reduce((a, x) => a + x.pnl, 0), all = D.days.reduce((a, x) => a + x.pnl, 0);
+  let sig = ["kr", "us"].map(session).join();
+  setInterval(() => { const s2 = ["kr", "us"].map(session).join(), atEnd = cur === dates.length - 1; if (addLive() || s2 !== sig) { sig = s2; if (atEnd) cur = dates.length - 1; renderToday(); } }, 60000);
+  const recs = dates.filter(d => byDate(d).length), last = recs[recs.length - 1], ls = byDate(last).reduce((a, x) => a + x.pnl, 0), all = D.days.reduce((a, x) => a + x.pnl, 0);
   const msg = `★ ${fmtD(last)} 합계 ${won(ls)} ★ ` + byDate(last).map(x => `${BOT[x.market].name} ${x.wins}승 ${x.losses}패 ${won(x.pnl)}`).join(" ★ ") + ` ★ 전체 누적 ${won(all)} ★ 키키키 봇은 오늘도 일한다 `;
   $("#tick").textContent = (msg + "   ").repeat(4);
   renderScore(); renderToday(); drawChart();
