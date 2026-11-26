@@ -1,0 +1,180 @@
+#!/usr/bin/env python3
+"""빗썸 1시간 테스트 봇 — 규칙 기반 단타 (BTC/ETH/XRP/SOL 중 가장 강한 1종목만)."""
+import base64, hashlib, hmac, json, os, sys, time, uuid, urllib.request, urllib.error
+from datetime import datetime, timedelta, timezone
+
+API = "https://api.bithumb.com"
+COINS = ["BTC", "ETH", "XRP", "SOL"]
+RUN_MIN = float(os.environ.get("RUN_MIN", 60))
+TP, SL = 0.008, 0.005            # 익절 +0.8% / 손절 -0.5%
+TRAIL_ON, TRAIL_GAP = 0.004, 0.004  # +0.4% 넘으면 고점 대비 -0.4% 추적
+HOLD_MAX = 15 * 60               # 최대 보유 15분
+DAY_STOP = -0.02                 # 누적 -2%면 그 자리에서 종료
+MAX_TRADES = 8
+COOLDOWN = 60
+USE = 0.995                      # 원화의 99.5%로 매수
+DRY = os.environ.get("DRY") == "1"
+KST = timezone(timedelta(hours=9))
+
+env = {}
+for l in open(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")):
+    if "=" in l:
+        k, v = l.rstrip("\n").split("=", 1); env[k] = v
+AK, SK = env["BITHUMB_ACCESS_KEY"], env["BITHUMB_SECRET_KEY"]
+KEY = SK.encode() if env.get("BITHUMB_SECRET_MODE", "raw") == "raw" else base64.b64decode(SK)
+
+
+def log(msg):
+    print(f"\r\x1b[2K{datetime.now(KST):%H:%M:%S} {msg}", flush=True)
+
+
+def _b(d): return base64.urlsafe_b64encode(d).rstrip(b"=")
+
+
+def token(query=None):
+    p = {"access_key": AK, "nonce": str(uuid.uuid4()), "timestamp": int(time.time() * 1000)}
+    if query:
+        p["query_hash"] = hashlib.sha512(query.encode()).hexdigest(); p["query_hash_alg"] = "SHA512"
+    h = _b(json.dumps({"alg": "HS256", "typ": "JWT"}).encode()); pl = _b(json.dumps(p).encode())
+    return (h + b"." + pl + b"." + _b(hmac.new(KEY, h + b"." + pl, hashlib.sha256).digest())).decode()
+
+
+def req(method, path, body=None, auth=False):
+    headers = {}
+    data = None
+    if auth:
+        q = "&".join(f"{k}={v}" for k, v in body.items()) if body else None
+        headers["Authorization"] = "Bearer " + token(q)
+    if body is not None:
+        data = json.dumps(body).encode(); headers["Content-Type"] = "application/json"
+    for i in range(3):
+        try:
+            r = urllib.request.urlopen(urllib.request.Request(API + path, data=data, headers=headers, method=method), timeout=10)
+            return json.load(r)
+        except urllib.error.HTTPError as e:
+            msg = e.read().decode()[:200]
+            if e.code == 429 or e.code >= 500:
+                time.sleep(1 + i); continue
+            raise RuntimeError(f"{e.code} {msg}")
+        except (urllib.error.URLError, TimeoutError) as e:
+            time.sleep(1 + i); last = e
+    raise RuntimeError(f"네트워크 오류 {path}")
+
+
+def balances():
+    accts = req("GET", "/v1/accounts", auth=True)
+    return {a["currency"]: float(a["balance"]) for a in accts}, {a["currency"]: a["balance"] for a in accts}
+
+
+def candles(c, n=25):
+    return req("GET", f"/v1/candles/minutes/1?market=KRW-{c}&count={n}")[::-1]  # 오래된→최신
+
+
+def ema(xs, n):
+    k, e = 2 / (n + 1), xs[0]
+    for x in xs[1:]: e = x * k + e * (1 - k)
+    return e
+
+
+def signal(cs):
+    """진입 점수(0이면 진입 안 함). 최근 3분 상승 + EMA20 위 + 직전봉 양봉 + 거래대금 증가."""
+    if len(cs) < 22: return 0
+    close = [x["trade_price"] for x in cs]
+    vol = [x["candle_acc_trade_price"] for x in cs]
+    last = cs[-2]  # 마감된 직전 봉
+    r3 = close[-2] / close[-5] - 1
+    if close[-1] <= ema(close[:-1], 20): return 0
+    if last["trade_price"] <= last["opening_price"]: return 0
+    if r3 < 0.003 or r3 > 0.02: return 0          # +0.3%~+2% 사이만 (과열 추격 금지)
+    avg = sum(vol[-12:-2]) / 10
+    if avg <= 0 or vol[-2] < avg * 1.2: return 0
+    return r3
+
+
+def buy(c, krw):
+    body = {"market": f"KRW-{c}", "side": "bid", "order_type": "price", "price": str(int(krw))}
+    if DRY: log(f"[DRY] 매수 {body}"); return
+    req("POST", "/v2/orders", body, auth=True)
+
+
+def sell(c, vol_str):
+    body = {"market": f"KRW-{c}", "side": "ask", "order_type": "market", "volume": vol_str}
+    if DRY: log(f"[DRY] 매도 {body}"); return
+    req("POST", "/v2/orders", body, auth=True)
+
+
+def wait_coin(c, want_pos, sec=15):
+    for _ in range(sec):
+        b, raw = balances()
+        px = float(req("GET", f"/v1/ticker?markets=KRW-{c}")[0]["trade_price"])
+        if (b.get(c, 0) * px >= 1000) == want_pos: return b, raw
+        time.sleep(1)
+    return b, raw
+
+
+def main():
+    start = time.time(); end = start + RUN_MIN * 60
+    b, raw = balances()
+    krw0 = b.get("KRW", 0)
+    log(f"🚀 시작 — 원화 {krw0:,.0f}원, {RUN_MIN:.0f}분 운용{' (DRY)' if DRY else ''}")
+    if krw0 < 6000 and not DRY:
+        log("원화가 6,000원 미만이라 종료"); return
+    pos = None; trades = 0; last_exit = 0
+    while True:
+        now = time.time()
+        try:
+            if pos:
+                c = pos["c"]
+                px = float(req("GET", f"/v1/ticker?markets=KRW-{c}")[0]["trade_price"])
+                pnl = px / pos["entry"] - 1
+                pos["peak"] = max(pos["peak"], px)
+                reason = None
+                if pnl >= TP: reason = "익절"
+                elif pnl <= -SL: reason = "손절"
+                elif pos["peak"] / pos["entry"] - 1 >= TRAIL_ON and px <= pos["peak"] * (1 - TRAIL_GAP): reason = "추적익절"
+                elif now - pos["t"] >= HOLD_MAX: reason = "시간청산"
+                elif now >= end: reason = "종료청산"
+                if reason:
+                    b, raw = balances()
+                    sell(c, raw.get(c, "0"))
+                    b, _ = wait_coin(c, False)
+                    krw = b.get("KRW", 0)
+                    log(f"🔴 {reason} {c} {px:,.0f}원 ({pnl*100:+.2f}%) → 원화 {krw:,.0f}원 / 누적 {krw-krw0:+,.0f}원")
+                    pos = None; last_exit = time.time(); trades += 1
+                    if (krw / krw0 - 1) <= DAY_STOP: log("⛔ 누적 손실 한도(-2%) 도달 — 종료"); break
+                else:
+                    sys.stdout.write(f"\r  보유 {c} {px:,.0f}원 {pnl*100:+.2f}% (고점 {pos['peak']:,.0f})   "); sys.stdout.flush()
+                time.sleep(3); continue
+            if now >= end: log("⏰ 1시간 종료"); break
+            if trades >= MAX_TRADES: log("거래 횟수 한도 도달 — 종료"); break
+            if now - last_exit < COOLDOWN: time.sleep(5); continue
+            best = max(((signal(candles(c)), c) for c in COINS), key=lambda x: x[0])
+            if best[0] > 0:
+                c = best[1]
+                b, _ = balances(); krw = b.get("KRW", 0)
+                if krw < 6000: log("원화 부족 — 종료"); break
+                buy(c, krw * USE)
+                b, raw = wait_coin(c, True)
+                if DRY:
+                    entry = float(req("GET", f"/v1/ticker?markets=KRW-{c}")[0]["trade_price"])
+                else:
+                    acct = [a for a in req("GET", "/v1/accounts", auth=True) if a["currency"] == c]
+                    if not acct or float(acct[0]["balance"]) <= 0:
+                        log(f"⚠️ {c} 매수 체결 확인 안 됨 — 종료"); break
+                    entry = float(acct[0]["avg_buy_price"]) or float(req("GET", f"/v1/ticker?markets=KRW-{c}")[0]["trade_price"])
+                pos = {"c": c, "entry": entry, "peak": entry, "t": time.time()}
+                log(f"🟢 매수 {c} {entry:,.0f}원 (3분 상승 {best[0]*100:+.2f}%)")
+            else:
+                left = (end - now) / 60
+                sys.stdout.write(f"\r  관망 중… 남은 {left:4.1f}분, 거래 {trades}회   "); sys.stdout.flush()
+            time.sleep(15)
+        except Exception as e:
+            log(f"⚠️ 오류: {e}"); time.sleep(10)
+    b, _ = balances()
+    krw = b.get("KRW", 0)
+    left = {k: v for k, v in b.items() if k != "KRW" and v > 0}
+    log(f"🏁 끝 — 원화 {krw0:,.0f} → {krw:,.0f}원 ({krw-krw0:+,.0f}원), 거래 {trades}회{', 남은 코인 '+str(left) if left else ''}")
+
+
+if __name__ == "__main__":
+    main()
