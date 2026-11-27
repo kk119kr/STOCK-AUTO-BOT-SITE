@@ -248,11 +248,11 @@
   {
    "date": "2026-11-25",
    "market": "us",
-   "pnl": 116341,
+   "pnl": 116238,
    "usd": 86.57,
    "wins": 3,
    "losses": 1,
-   "capital": 4597764,
+   "capital": 4593659,
    "capital_usd": 3421.21,
    "auto_note": true,
    "note": "나스닥 급락장 속 반등주 선별, 5승1패 +90.14$",
@@ -260,22 +260,22 @@
     {
      "name": "SPCX",
      "usd": 56.28,
-     "pnl": 75635
+     "pnl": 75567
     },
     {
      "name": "ANT",
      "usd": 48.62,
-     "pnl": 65340
+     "pnl": 65282
     },
     {
      "name": "DELL",
      "usd": 0.56,
-     "pnl": 753
+     "pnl": 752
     },
     {
      "name": "META",
      "usd": -18.89,
-     "pnl": -25386
+     "pnl": -25364
     }
    ],
    "strategy": {
